@@ -1,2 +1,2 @@
 # superelliptic
-Programs related to the article "Rational points on Jacobians of cyclic covers"
+Programs related to the upcoming article "Rational points on Jacobians of cyclic covers"
