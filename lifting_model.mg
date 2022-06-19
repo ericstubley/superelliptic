@@ -1,11 +1,26 @@
+/*
+A model for determining which cohomology classes lift. The main objects are sequences
+[k_1, ..., k_gamma], where an entry k_i means that a_i^[k_i] exists, and if k_i is not
+equal to the maximum value of the sequence, then a_i^[k_i+1] does not exist.
+
+Basic methods include:
+- Lift: finds all possible one-step lifts of a given starting sequence
+- LiftList: finds all possible one-step lifts of a list of starting sequences
+- AllLifts: finds all possible final lifting sequences for a given set of parameters
+- 
+*/
+
 function red(n, gamma)
-    // computes n mod gamma in the range [1..gamma]
+    /* computes n mod gamma in the range [1..gamma] */
+
     return ((n-1) mod gamma) + 1;
 end function;
 
 function Lift(f, k, gamma, prob)
-    // given F_k, produces all possible F_{k+1}. A probability is assigned to each lift according to
-    // the value of prob: if a lift is possible but not guaranteed, it occurs with probability prob.
+    /*
+    given F_k, produces all possible F_{k+1}. A probability is assigned to each lift according to
+    the value of prob: if a lift is possible but not guaranteed, it occurs with probability prob.
+    */
 
     newf := f;
     pairreps := [];
@@ -53,7 +68,7 @@ function Lift(f, k, gamma, prob)
 end function;
 
 function LiftList(flist, k, gamma, prob)
-    //Apply Lift to every F_k in a list, propagating probabilities accordingly
+    /* Apply Lift to every F_k in a list, propagating probabilities accordingly */
 
     newflist := [];
     for fpair in flist do
@@ -65,21 +80,24 @@ function LiftList(flist, k, gamma, prob)
 end function;
 
 function VanishingSequence(f)
-    // The values of n such that a_n cup b = 0 (i.e. a_n^[1] exists)
+    /* The values of n such that a_n cup b = 0 (i.e. a_n^[1] exists) */
 
     return [n : n in [1..#f] | f[n] ge 1];
 end function;
 
 function Contributions(f, gamma)
-    // The number of times each a_n contributes to the rank
+    /* The number of times each a_n contributes to the l-rank */
 
     return [Floor((f[n]+n)/gamma) : n in [2..gamma]];
 end function;
 
 function AllLifts(l, gamma, d : start := [], prob := -1)
-    // Produce an exhaustive list of all possible F_{l-2}. If start is provided, 
-    // it must be an F_k for some k; the lifiting process will only consider lifts of F_k.
-    // WARNING: can be very slow for large l.
+    /*
+    Produce an exhaustive list of all possible F_{l-2}. If start is provided, 
+    it must be an F_k for some k; the lifiting process will only consider lifts of F_k.
+
+    WARNING: can be very slow for large l. "RandomLifts" is recommended.
+    */
 
     if prob eq -1 then prob := 1/l; end if;
 
@@ -93,7 +111,7 @@ function AllLifts(l, gamma, d : start := [], prob := -1)
 
     // Lift the starting point to F_{l-2}
     flist := [<f0, 1>];
-    for k in [k0..l-3] do
+    for k in [k0..l-4] do
         flist := LiftList(flist, k, gamma, prob);
     end for;
     
@@ -108,9 +126,11 @@ function AllLifts(l, gamma, d : start := [], prob := -1)
 end function;
 
 function RandomLift(l, gamma, d : start := [], prob := -1)
-    // Like AllLifts except it only returns a single F_{l-2} with some probability.
-    // Better for large l. prob (by default set to 1/l) can be increased 
-    // to make it more likely for classes to lift.
+    /*
+    Like AllLifts except it only returns a single F_{l-2} with some probability.
+    Better for large l. prob (by default set to 1/l) can be increased 
+    to make it more likely for classes to lift.
+    */
 
     if prob eq -1 then prob := 1/l; end if;
 
@@ -123,7 +143,7 @@ function RandomLift(l, gamma, d : start := [], prob := -1)
     end if;
 
 
-    for k in [k0..l-3] do
+    for k in [k0..l-4] do
         flist := Lift(f, k, gamma, prob);
         markers := [&+[fpair[2] : fpair in flist[1..i]] : i in [1..#flist]];
         denom := LCM([Denominator(marker) : marker in markers]);
@@ -138,20 +158,22 @@ function RandomLift(l, gamma, d : start := [], prob := -1)
 end function;
 
 function RandomLifts(l, gamma, d, count : start := [], prob := -1)
-    // returns "count" many instances of RandomLift.
+    /* returns "count" many instances of RandomLift. */
 
     return [RandomLift(l, gamma, d : start := start, prob := prob) : i in [1..count]];
 end function;
 
 function RankData(l, gamma, d : count := 0, CupProds := [], prob := -1)
-    // Return a list of the possible ranks. If a natural number is given
-    // for option "count," that many random lifts will be computed (with the probability
-    // of lifting determined by prob), potentially returning only a subset of the 
-    // possible ranks. Otherwise, all lifts will be computed.
-    //
-    // Option "CupProds" only makes a difference if gamma divides d. In this case,
-    // F_1 is initialized so that the specified cup products a_n cup with b to 0
-    // (as well as any other forced relations).
+    /*
+    Return a list of the possible ranks. If a natural number is given
+    for option "count," that many random lifts will be computed (with the probability
+    of lifting determined by prob), potentially returning only a subset of the 
+    possible ranks. Otherwise, all lifts will be computed.
+    
+    Option "CupProds" only makes a difference if gamma divides d. In this case,
+    F_1 is initialized so that the specified cup products a_n cup with a_1 to 0
+    (as well as a_1 itself and any other relations forced by duality).
+    */
 
     start := [IsDivisibleBy(d*(n-1), gamma) select 0 else -1 : n in [1..gamma]];
 
