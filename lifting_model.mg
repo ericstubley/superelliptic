@@ -26,16 +26,24 @@ function Lift(f, k, gamma, prob)
     pairreps := [];
 
     for n in [n : n in [1..gamma] | f[n] eq k] do
-        if n eq 1 or (n+k) mod gamma eq 0 or (k ge 1 and (2*n+k-1) mod gamma eq 0) then
-            // a_1^[k] always lifts; a_{-k}^[k] is the dual to a_1; self-duals always lift unless k=0.
+        if n eq 1 or (n+k) mod gamma eq 0 then
+            // a_1^[k] always lifts; a_{-k}^[k] is the dual to a_1
             newf[n] := k+1;
         end if;
+        lowerdiag_rooftop := false;
         for j in [1..k+1] do
             if f[red(n+j, gamma)] eq k - j or (f[red(1-k-n, gamma)] eq k and f[red(1-k-n+j, gamma)] eq k - j) then
                 // either a_n^[k] can be modified by an obstruction, or its dual exists and can be so modified
                 newf[n] := k+1;
             end if;
+            if j lt k and f[red(n+j, gamma)] eq k - j - 1 then
+                // self-dual argument fails
+                lowerdiag_rooftop := true;
+            end if;
         end for;
+        if k ge 1 and (2*n+k-1) mod gamma eq 0 and not lowerdiag_rooftop then
+            newf[n] := k+1;
+        end if;
 
         if newf[n] eq k and not red(1-k-n, gamma) in pairreps then
             // include one a_n^[k] from each dual pair where lifting is possible but not forced
